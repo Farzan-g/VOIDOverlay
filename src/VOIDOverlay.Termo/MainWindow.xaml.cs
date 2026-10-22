@@ -42,6 +42,7 @@ public partial class MainWindow : Window
             vm.ApplySettings(settings);
         }
 
+        ApplyAppearance(settings);
         ApplyWindowPosition();
         UpdateClickThroughState();
     }
@@ -114,8 +115,11 @@ public partial class MainWindow : Window
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        Opacity = 1;
-        Topmost = true;
+        if (DataContext is MainViewModel vm)
+        {
+            ApplyAppearance(vm.Settings);
+        }
+
         ApplyWindowPosition();
         UpdateClickThroughState();
         if (!((MainViewModel)DataContext).Settings.IsOverlayVisible)
@@ -143,11 +147,6 @@ public partial class MainWindow : Window
     {
         if (DataContext is MainViewModel vm && !vm.Settings.IsLocked)
         {
-            if (vm.Settings.ClickThrough)
-            {
-                vm.Settings.ClickThrough = false;
-            }
-
             UpdateClickThroughState();
             DragMove();
         }
@@ -172,8 +171,39 @@ public partial class MainWindow : Window
 
         var style = GetWindowLong(hwndSource.Handle, GWL_EXSTYLE);
         var layered = style | WS_EX_LAYERED;
-        var transparent = (vm.Settings.ClickThrough && vm.Settings.IsLocked) ? layered | WS_EX_TRANSPARENT : layered & ~WS_EX_TRANSPARENT;
+        var transparent = vm.Settings.ClickThrough ? layered | WS_EX_TRANSPARENT : layered & ~WS_EX_TRANSPARENT;
         SetWindowLong(hwndSource.Handle, GWL_EXSTYLE, transparent);
+    }
+
+    private void ApplyAppearance(OverlaySettings settings)
+    {
+        OverlaySurface.Background = ParseBrush(settings.BackgroundColor, settings.BackgroundOpacity, settings.BackgroundEnabled);
+        OverlaySurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
+        OverlaySurface.BorderThickness = new Thickness(0);
+        Opacity = settings.Opacity;
+        Topmost = settings.AlwaysOnTop;
+        CpuTemperatureTextBlock.FontSize = settings.FontSize;
+        GpuTemperatureTextBlock.FontSize = settings.FontSize;
+        CpuTemperatureTextBlock.Foreground = ParseBrush(settings.AccentColor, 1);
+        GpuTemperatureTextBlock.Foreground = ParseBrush(settings.SecondaryAccentColor, 1);
+        CpuLabel.Foreground = ParseBrush(settings.TextColor, 1);
+        GpuLabel.Foreground = ParseBrush(settings.TextColor, 1);
+        CpuChart.StrokeBrush = ParseBrush(settings.AccentColor, 1);
+        GpuChart.StrokeBrush = ParseBrush(settings.SecondaryAccentColor, 1);
+    }
+
+    private static System.Windows.Media.Brush ParseBrush(string color, double opacity, bool enabled = true)
+    {
+        if (!enabled)
+        {
+            return System.Windows.Media.Brushes.Transparent;
+        }
+
+        var brush = new System.Windows.Media.SolidColorBrush(
+            (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
+        brush.Opacity = opacity;
+        brush.Freeze();
+        return brush;
     }
 
     private Screen GetTargetScreen()

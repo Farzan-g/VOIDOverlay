@@ -1,4 +1,4 @@
-name: VOIDOverlay Termo - Windows build and tests
+name: VOID Overlay Termo - Windows verification
 
 on:
   push:
@@ -13,9 +13,11 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Restore
-        run: dotnet restore .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj
-      - name: Test
-        run: dotnet test .\VOIDOverlay.Termo.Tests\VOIDOverlay.Termo.Tests.csproj --configuration Release
+      - name: Build Debug
+        run: .\scripts\build.ps1 -Configuration Debug
+      - name: Test Release
+        run: .\scripts\test.ps1 -Configuration Release
       - name: Build Release
-        run: dotnet build .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj --configuration Release --no-restore
+        run: .\scripts\build.ps1 -Configuration Release
+      - name: Publish Windows x64
+        run: .\scripts\publish.ps1

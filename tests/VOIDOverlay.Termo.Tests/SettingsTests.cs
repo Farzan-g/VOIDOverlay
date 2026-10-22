@@ -5,14 +5,22 @@ namespace VOIDOverlay.Tests;
 public class SettingsTests
 {
     [Fact]
-    public void OverlaySettings_ShouldDefaultToTopRightAndMinimalWindow()
+    public void OverlaySettings_UsesSharedFamilyAppearanceDefaults()
     {
         var settings = new OverlaySettings();
 
-        Assert.Equal(OverlayPosition.TopRight, settings.Position);
-        Assert.Equal(180, settings.WindowWidth);
-        Assert.Equal(42, settings.WindowHeight);
+        Assert.Equal(OverlayPosition.TopCenter, settings.Position);
+        Assert.Equal(280, settings.WindowWidth);
+        Assert.Equal(62, settings.WindowHeight);
         Assert.Equal(1000, settings.RefreshIntervalMs);
+        Assert.Equal(13, settings.FontSize);
+        Assert.True(settings.BackgroundEnabled);
+        Assert.Equal("#111720", settings.BackgroundColor);
+        Assert.Equal(0.5, settings.BackgroundOpacity);
+        Assert.Equal("#F2F4F7", settings.TextColor);
+        Assert.Equal("#4DE3D2", settings.AccentColor);
+        Assert.Equal("#FFAE5C", settings.SecondaryAccentColor);
+        Assert.Equal(1, settings.Opacity);
         Assert.Equal(0, settings.HorizontalOffsetX);
         Assert.Equal(0, settings.VerticalOffsetY);
         Assert.Equal(OverlayEdgeReference.WorkArea, settings.EdgeReference);
@@ -103,5 +111,30 @@ public class SettingsTests
                 Directory.Delete(folder, recursive: true);
             }
         }
+    }
+
+    [Fact]
+    public void OverlaySettings_ValidatesSharedAppearanceAndPositionRanges()
+    {
+        var settings = new OverlaySettings
+        {
+            FontSize = 50,
+            BackgroundOpacity = double.NaN,
+            Opacity = 0,
+            BackgroundColor = "not-a-color",
+            TextColor = "#nothex",
+            HorizontalOffsetX = -900,
+            VerticalOffsetY = 5000
+        };
+
+        settings.Validate();
+
+        Assert.Equal(24, settings.FontSize);
+        Assert.Equal(0.5, settings.BackgroundOpacity);
+        Assert.Equal(0.3, settings.Opacity);
+        Assert.Equal("#111720", settings.BackgroundColor);
+        Assert.Equal("#F2F4F7", settings.TextColor);
+        Assert.Equal(-200, settings.HorizontalOffsetX);
+        Assert.Equal(1000, settings.VerticalOffsetY);
     }
 }

@@ -1,0 +1,38 @@
+<Application x:Class="VOIDOverlay.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <SolidColorBrush x:Key="VoidBackgroundBrush" Color="#FF111720" />
+        <SolidColorBrush x:Key="VoidForegroundBrush" Color="#FFF2F4F7" />
+        <SolidColorBrush x:Key="VoidAccentBrush" Color="#FF4DE3D2" />
+        <SolidColorBrush x:Key="VoidSecondaryAccentBrush" Color="#FFFFAE5C" />
+        <SolidColorBrush x:Key="VoidControlBrush" Color="#FF1C2733" />
+        <SolidColorBrush x:Key="VoidControlBorderBrush" Color="#FF354352" />
+        <Style TargetType="{x:Type Window}">
+            <Setter Property="FontFamily" Value="Segoe UI" />
+        </Style>
+        <Style TargetType="{x:Type TextBlock}">
+            <Setter Property="Foreground" Value="{StaticResource VoidForegroundBrush}" />
+        </Style>
+        <Style TargetType="{x:Type CheckBox}">
+            <Setter Property="Foreground" Value="{StaticResource VoidForegroundBrush}" />
+        </Style>
+        <Style TargetType="{x:Type TextBox}">
+            <Setter Property="Background" Value="{StaticResource VoidControlBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource VoidForegroundBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource VoidControlBorderBrush}" />
+            <Setter Property="CaretBrush" Value="{StaticResource VoidAccentBrush}" />
+            <Setter Property="Padding" Value="6,3" />
+        </Style>
+        <Style TargetType="{x:Type ComboBox}">
+            <Setter Property="Background" Value="{StaticResource VoidControlBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource VoidForegroundBrush}" />
+        </Style>
+        <Style TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="{StaticResource VoidControlBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource VoidForegroundBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource VoidControlBorderBrush}" />
+        </Style>
+    </Application.Resources>
+</Application>

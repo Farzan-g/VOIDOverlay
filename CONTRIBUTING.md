@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for considering a contribution to VOIDOverlay Termo, a standalone tool in the VOID Overlay family. Preserve Termo's compact transparent UI and avoid unrelated rewrites.
+Thanks for considering a contribution to VOID Overlay Termo, a standalone tool in the VOID Overlay family. Preserve Termo's compact transparent UI and avoid unrelated rewrites.
 
 ## Development setup
 
@@ -11,12 +11,11 @@ Thanks for considering a contribution to VOIDOverlay Termo, a standalone tool in
 From the repository root:
 
 ```powershell
-dotnet restore .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj
-dotnet test .\VOIDOverlay.Termo.Tests\VOIDOverlay.Termo.Tests.csproj --configuration Release
-dotnet build .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj --configuration Release --no-restore
+.\scripts\build.ps1 -Configuration Release
+.\scripts\test.ps1 -Configuration Release
 ```
 
-Use `.\scripts\build-release.ps1` to run the standard local verification sequence.
+Use `.\scripts\publish.ps1` to create the framework-dependent Windows x64 output under `artifacts\publish\win-x64\`.
 
 ## Change guidelines
 

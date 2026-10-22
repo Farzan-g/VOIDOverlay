@@ -1,129 +1,61 @@
-# VOIDOverlay Termo
+# VOID Overlay Termo
 
-VOIDOverlay Termo (short display name: **Termo**) is a transparent, always-on-top Windows desktop overlay focused on displaying CPU and GPU temperatures, with compact temperature history graphs and system-tray controls. It is a standalone tool in the VOID Overlay project family.
-
-> There is no application screenshot in this source tree. Hardware behavior varies by system; read [known limitations](#hardware-and-sensor-limitations) before relying on a particular reading.
-
-## VOID Overlay family
-
-**VOID Overlay** is a family of small, focused, minimalist desktop overlays.
-
-- **VOIDOverlay Termo (Termo):** the existing standalone tool for CPU and GPU temperature monitoring.
-- **VOIDOverlay Metron:** a separate, independently buildable sibling application for CPU, GPU, and RAM utilization, with FPS unavailable unless a real frame-statistics provider is configured. Metron is maintained in its own repository and is not a dependency of Termo.
+VOID Overlay Termo is an independent Windows desktop overlay for CPU and GPU temperatures, with short history charts and a system-tray menu. Its sibling, [VOID Overlay Metron](../Metron/README.md), is a separate app for utilization, memory, and FPS availability; neither app depends on the other.
 
 ## Features
 
-- CPU and GPU temperature readings and compact history graphs.
-- CPU/GPU load, clock, RAM, and VRAM reporting when the hardware provider exposes those values; temperatures remain the focus of Termo.
-- Transparent, topmost overlay with lock and click-through options.
-- Four corner presets, independent X/Y offsets, and full-monitor or work-area reference.
-- Configurable sampling interval (250–5000 ms).
-- Settings persisted under `%LOCALAPPDATA%\VOIDOverlay\settings.json`.
-- Diagnostics mode for sensor discovery, selection, readings, and positioning.
-- Application, window, and tray icons use `VOIDOverlay.Termo/assets/void-overlay.ico`.
+- CPU/GPU temperature readings and rolling history charts via LibreHardwareMonitor.
+- Optional CPU/GPU load, clock, RAM, and VRAM readings when exposed by the hardware provider.
+- Transparent, topmost overlay with configurable surface, text/accent colors, font size, and content/surface opacity.
+- Six anchors, X/Y offsets, full-screen/work-area edge reference, click-through and lock controls.
+- Per-user startup integration, settings persistence, and optional sensor/position diagnostics.
+- Missing or invalid readings display as `N/A`; values are never fabricated.
 
-## Supported platform and requirements
+## Requirements and limitations
 
-- Windows 10 or Windows 11, x64.
-- .NET 8 Windows Desktop Runtime for the framework-dependent published build.
-- Administrator approval at launch. The application manifest requests elevation because the hardware-monitor driver may require it to read CPU sensors.
-- Internet access during the first restore/build to retrieve NuGet dependencies.
+- Windows 10/11 x64. The project targets `net8.0-windows`; a framework-dependent publish requires the .NET 8 Windows Desktop Runtime.
+- The application manifest requests administrator elevation for hardware sensor access. Some hardware or drivers may still not expose temperature sensors.
+- This source tree has no verified screenshot, installer, or public release link. Hardware, multi-monitor, and DPI behavior must be validated on the target PC.
 
-The project targets `net8.0-windows`, uses WPF and Windows Forms, and has been built with the .NET 10 SDK against the .NET 8 target. Runtime compatibility has not been verified on every Windows version or hardware configuration.
+## Run and build
 
-## Install and launch
-
-There is not yet a public installer or release download. To run from source, clone or download the project, open PowerShell in the repository root, and run:
+Install a compatible .NET SDK and run from the repository root:
 
 ```powershell
-dotnet run --project .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj
+dotnet run --project .\src\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj
+.\scripts\build.ps1 -Configuration Release
+.\scripts\test.ps1 -Configuration Release
 ```
 
-Approve the Windows elevation prompt. The overlay runs in the notification area; closing or hiding the small overlay does not exit the process.
+The scripts work from any current directory and store build/test artifacts under `artifacts\build\`.
 
-### Build from source
-
-Install the .NET 8 SDK or a compatible newer SDK, then run:
+## Publish
 
 ```powershell
-dotnet restore .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj
-dotnet test .\VOIDOverlay.Termo.Tests\VOIDOverlay.Termo.Tests.csproj --configuration Release
-dotnet build .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj --configuration Release --no-restore
+.\scripts\publish.ps1
 ```
 
-The release helper script runs the same restore, test, and build sequence:
+This creates a framework-dependent Windows x64 application in `artifacts\publish\win-x64\`. It does not create an archive or installer. The executable requests administrator approval.
 
-```powershell
-.\scripts\build-release.ps1
-```
+## Tray, settings, and configuration
 
-### Publish for Windows x64
+The tray menu uses the shared order: app name, **Open Settings...**, **Show/Hide Overlay**, **Lock Position**, **Start with Windows**, **About VOID Overlay Termo**, **Exit**. Settings use General, Appearance, Position, Monitoring, and About sections.
 
-To create a framework-dependent Windows x64 publish folder:
+Color values use `#RRGGBB`; font size is 9–24 DIPs; X/Y offsets range from -200 to 1000 DIPs. Negative X moves left and negative Y moves up from the selected anchor. Placement is clamped to the selected display bounds. Termo follows the display containing its overlay, falling back to the primary display; edge reference can be the full monitor or taskbar-excluding work area.
 
-```powershell
-.\scripts\publish-windows-x64.ps1
-```
-
-The output is written to `publish\VOIDOverlay-Termo\win-x64\` with the `VOIDOverlay.Termo.exe` executable. The publish is framework-dependent (`--self-contained false`), so users need the .NET 8 Windows Desktop Runtime. The executable requests administrator approval when launched. The script stages and validates a replacement before updating the previous publish directory. It does not create an installer or archive.
-
-## Use and configure
-
-The tray icon menu provides:
-
-- **Show/Hide Overlay** (double-clicking the tray icon also toggles visibility).
-- **Overlay Position** with TopLeft, TopRight, BottomLeft, and BottomRight presets.
-- **Lock/Unlock**, **Settings**, **Start with Windows**, and **Exit**.
-
-Settings provides sampling interval, lock/click-through/startup preferences, and position fine-tuning. Horizontal X and vertical Y offsets are specified in WPF device-independent units (DIPs), default to zero, and accept values from -200 to 1000. Negative offsets intentionally move beyond the selected edge; large positive offsets may move the overlay beyond the opposite edge. Edge reference can be the full monitor bounds or the taskbar-excluding work area. Existing settings using the former shared edge margin are migrated to matching initial X and Y offsets. Settings writes use a temporary file before replacing the current JSON file; malformed or unreadable settings are reported to diagnostic tracing and defaults are used.
-
-Position is calculated relative to the monitor currently containing the overlay, with the primary monitor used if no window monitor is available. Per-window DPI is used for conversion between physical monitor bounds and WPF DIPs.
-
-## Hardware monitoring
-
-LibreHardwareMonitor is used to discover sensors and refresh readings in the background. CPU selection prefers a valid package sensor, then a die/Tctl/Tdie reading, then a core aggregate, then a core sensor. GPU selection targets the GPU core temperature. The application does not invent values; unavailable or invalid measurements display as `N/A`, and graph history records gaps as missing samples.
-
-Sensor availability depends on CPU/GPU model, firmware, driver support, and elevation. Some systems do not expose CPU temperatures to the provider, and the presence of a GPU temperature does not imply that CPU temperature is supported. Load, clock, memory, and VRAM values may also be unavailable on some hardware.
-
-### Diagnostics
-
-Launch with `--diagnostics` to write detailed telemetry and position logs to:
-
-```text
-%LOCALAPPDATA%\VOIDOverlay\diagnostics.log
-```
-
-Logs can disclose hardware names, sensor identifiers/readings, and local timestamps. Review and redact diagnostic output before sharing it publicly.
+Settings are stored in `%LOCALAPPDATA%\VOIDOverlay\Termo\settings.json`. Legacy shared edge-margin settings migrate to the two independent offsets. Diagnostics are opt-in via `--diagnostics`; they may include hardware identifiers and readings. Review and redact diagnostic data before sharing.
 
 ## Troubleshooting
 
-- **CPU/GPU shows N/A:** confirm the device and driver are supported, approve the elevation prompt, and review diagnostics for discovered hardware, sensor candidates, and update failures.
-- **Overlay is hidden:** double-click the tray icon or use its Show/Hide menu.
-- **Position is unexpected:** check the selected corner, X/Y offsets, and Full Screen/Work Area edge reference. Negative offsets and large positive values may place part of the overlay outside the screen by design.
-- **Settings do not persist:** confirm the current Windows user can write to `%LOCALAPPDATA%\VOIDOverlay`.
-- **Build fails:** verify a compatible .NET SDK is installed and rerun `dotnet restore`.
+- **Temperature is `N/A`:** check device/driver support and the elevation prompt. Hardware and firmware determine sensor availability.
+- **Overlay is hidden:** use its tray visibility action or double-click the tray icon.
+- **Settings do not persist:** verify the current user can write to `%LOCALAPPDATA%\VOIDOverlay\Termo`.
+- **Position changed after a display update:** select an anchor and edge reference again; position uses the display containing the overlay.
 
-## Tests
+## Development, structure, and licensing
 
-Run all automated tests with:
+The app project is under `src/VOIDOverlay.Termo/`, tests under `tests/VOIDOverlay.Termo.Tests/`, and scripts under `scripts/`. The workspace-level [product standard](../docs/PRODUCT_STANDARD.md), [settings parity](../docs/SETTINGS_PARITY.md), and [project structure](../docs/PROJECT_STRUCTURE.md) explain shared conventions and app-specific exceptions.
 
-```powershell
-dotnet test .\VOIDOverlay.Termo.Tests\VOIDOverlay.Termo.Tests.csproj --configuration Release
-```
+Run `.\scripts\test.ps1 -Configuration Release` for automated tests covering sensor selection, telemetry presentation, positioning, settings migration, and window sizing. These tests do not require specialized sensor hardware.
 
-The test project covers CPU sensor selection, telemetry/view-model updates, position calculations, settings persistence/migration, and settings-window sizing. Automated tests do not replace physical validation on different CPUs, GPUs, monitors, and DPI configurations.
-The release-preparation test/build run is automated; this audit did not perform a new physical CPU/GPU telemetry or multi-monitor DPI test.
-
-## Dependencies and licensing
-
-Direct NuGet dependencies include CommunityToolkit.Mvvm and LibreHardwareMonitorLib. See [DEPENDENCIES.md](./DEPENDENCIES.md) for the resolved dependency list and license review notes.
-
-The project code is licensed under the MIT License; see [LICENSE](./LICENSE). Third-party packages retain their own terms. Review [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md) and [DEPENDENCIES.md](./DEPENDENCIES.md) before distributing a release.
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for local build, test, and contribution guidance.
-
-## Security
-
-Do not post unredacted diagnostics publicly. A private vulnerability-reporting contact has not yet been configured; establish one before enabling public vulnerability reports for a GitHub repository.
+See [CONTRIBUTING.md](./CONTRIBUTING.md), [DEPENDENCIES.md](./DEPENDENCIES.md), [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md), and [LICENSE](./LICENSE). Dependency/license review has unresolved follow-ups; see those notices before redistribution.

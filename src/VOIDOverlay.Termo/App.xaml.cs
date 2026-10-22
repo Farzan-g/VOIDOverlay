@@ -18,6 +18,9 @@ public partial class App : System.Windows.Application
     private Icon? _trayIcon;
     private Stream? _trayIconStream;
     private OverlaySettingsWindow? _settingsWindow;
+    private ToolStripMenuItem? _visibilityMenuItem;
+    private ToolStripMenuItem? _lockMenuItem;
+    private ToolStripMenuItem? _startupMenuItem;
 
     public App()
     {
@@ -35,6 +38,8 @@ public partial class App : System.Windows.Application
             var diagnosticsPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "VOIDOverlay",
+                "Termo",
+                "logs",
                 "diagnostics.log");
             Directory.CreateDirectory(Path.GetDirectoryName(diagnosticsPath)!);
             Trace.Listeners.Add(new TextWriterTraceListener(diagnosticsPath));
@@ -60,6 +65,8 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _settingsWindow?.CloseForExit();
+        _overlayWindow?.Close();
         _notifyIcon?.Dispose();
         _trayIcon?.Dispose();
         _trayIconStream?.Dispose();
@@ -77,6 +84,7 @@ public partial class App : System.Windows.Application
         var shouldShow = !_overlayWindow.IsVisible;
         _settings.IsOverlayVisible = shouldShow;
         _overlayWindow.SetOverlayVisible(shouldShow);
+        UpdateTrayMenu();
         _settingsService.Save(_settings);
     }
 
@@ -89,6 +97,7 @@ public partial class App : System.Windows.Application
     {
         _settings.IsLocked = isLocked;
         _overlayWindow?.ApplySettings(_settings);
+        UpdateTrayMenu();
         _settingsService.Save(_settings);
     }
 
@@ -125,22 +134,47 @@ public partial class App : System.Windows.Application
 
     public void ToggleStartWithWindows()
     {
-        _settings.StartWithWindows = !_settings.StartWithWindows;
-        UpdateStartupRegistry(_settings.StartWithWindows);
-        _settingsService.Save(_settings);
+        SetStartWithWindows(!_settings.StartWithWindows);
+    }
+
+    public void SetStartWithWindows(bool enabled)
+    {
+        UpdateStartupRegistry(enabled);
+        _settings.StartWithWindows = enabled;
+        UpdateTrayMenu();
+        SaveSettings();
+    }
+
+    public void ApplySettings(OverlaySettings settings)
+    {
+        _settings = settings;
+        _overlayWindow?.ApplySettings(settings);
+        UpdateTrayMenu();
     }
 
     public void OpenSettingsWindow()
     {
         if (_settingsWindow is not null)
         {
+            _settingsWindow.Show();
             _settingsWindow.Activate();
             return;
         }
 
         _settingsWindow = new OverlaySettingsWindow(_settings, this);
-        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
+    }
+
+    public void SaveSettings()
+    {
+        try
+        {
+            _settingsService.Save(_settings);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Trace.WriteLine($"Unable to save Termo settings. {exception}");
+        }
     }
 
     private void CreateTrayIcon()
@@ -155,44 +189,65 @@ public partial class App : System.Windows.Application
         {
             Icon = _trayIcon,
             Visible = true,
-            Text = "Termo"
+            Text = "VOID Overlay Termo"
         };
 
         var contextMenu = new ContextMenuStrip();
-        var toggleItem = new ToolStripMenuItem(_settings.IsOverlayVisible ? "Hide Overlay" : "Show Overlay");
-        toggleItem.Click += (_, _) => ShowHideOverlay();
-
-        var positionMenu = new ToolStripMenuItem("Overlay Position");
-        foreach (OverlayPosition position in Enum.GetValues(typeof(OverlayPosition)))
+        contextMenu.Items.Add(new ToolStripMenuItem("VOID Overlay Termo") { Enabled = false });
+        contextMenu.Items.Add(new ToolStripSeparator());
+        contextMenu.Items.Add("Open Settings...", null, (_, _) => OpenSettingsWindow());
+        _visibilityMenuItem = new ToolStripMenuItem();
+        _visibilityMenuItem.Click += (_, _) => ShowHideOverlay();
+        contextMenu.Items.Add(_visibilityMenuItem);
+        _lockMenuItem = new ToolStripMenuItem("Lock Position") { CheckOnClick = true };
+        _lockMenuItem.CheckedChanged += (_, _) => SetLock(_lockMenuItem.Checked);
+        contextMenu.Items.Add(_lockMenuItem);
+        _startupMenuItem = new ToolStripMenuItem("Start with Windows") { CheckOnClick = true };
+        _startupMenuItem.CheckedChanged += (_, _) =>
         {
-            var item = new ToolStripMenuItem(position.ToString());
-            item.Click += (_, _) => SetPosition(position);
-            positionMenu.DropDownItems.Add(item);
-        }
-
-        var lockItem = new ToolStripMenuItem(_settings.IsLocked ? "Unlock Overlay" : "Lock Overlay");
-        lockItem.Click += (_, _) => ToggleLock();
-
-        var settingsItem = new ToolStripMenuItem("Settings");
-        settingsItem.Click += (_, _) => OpenSettingsWindow();
-
-        var startupItem = new ToolStripMenuItem(_settings.StartWithWindows ? "Disable Start with Windows" : "Enable Start with Windows");
-        startupItem.Click += (_, _) => ToggleStartWithWindows();
-
-        var exitItem = new ToolStripMenuItem("Exit");
-        exitItem.Click += (_, _) => Shutdown();
-
-        contextMenu.Items.Add(toggleItem);
-        contextMenu.Items.Add(positionMenu);
-        contextMenu.Items.Add(lockItem);
-        contextMenu.Items.Add(settingsItem);
-        contextMenu.Items.Add(startupItem);
-        contextMenu.Items.Add(exitItem);
+            try
+            {
+                SetStartWithWindows(_startupMenuItem.Checked);
+            }
+            catch (Exception exception) when (
+                exception is UnauthorizedAccessException or InvalidOperationException or System.Security.SecurityException)
+            {
+                Trace.WriteLine($"Unable to update Termo startup registration: {exception}");
+                _startupMenuItem.Checked = _settings.StartWithWindows;
+            }
+        };
+        contextMenu.Items.Add(_startupMenuItem);
+        contextMenu.Items.Add(new ToolStripSeparator());
+        contextMenu.Items.Add("About VOID Overlay Termo", null, (_, _) =>
+            System.Windows.MessageBox.Show(
+                "VOID Overlay Termo\nCPU and GPU temperature overlay.",
+                "About VOID Overlay Termo",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information));
+        contextMenu.Items.Add(new ToolStripSeparator());
+        contextMenu.Items.Add("Exit", null, (_, _) => Shutdown());
 
         _notifyIcon.ContextMenuStrip = contextMenu;
         _notifyIcon.DoubleClick += (_, _) => ShowHideOverlay();
+        UpdateTrayMenu();
+    }
 
-        _notifyIcon.Visible = true;
+    private void UpdateTrayMenu()
+    {
+        if (_visibilityMenuItem is not null)
+        {
+            _visibilityMenuItem.Text = _overlayWindow?.IsVisible == true ? "Hide Overlay" : "Show Overlay";
+        }
+
+        if (_lockMenuItem is not null)
+        {
+            _lockMenuItem.Checked = _settings.IsLocked;
+        }
+
+        if (_startupMenuItem is not null)
+        {
+            _startupMenuItem.Checked = _settings.StartWithWindows;
+        }
     }
 
     private static void UpdateStartupRegistry(bool enabled)
@@ -201,16 +256,19 @@ public partial class App : System.Windows.Application
         var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
         if (key is null)
         {
-            return;
+            throw new InvalidOperationException("The current-user startup registry key could not be opened.");
         }
 
-        if (enabled)
+        using (key)
         {
-            key.SetValue("VOIDOverlay", $"\"{appPath}\"");
-        }
-        else
-        {
-            key.DeleteValue("VOIDOverlay", false);
+            if (enabled)
+            {
+                key.SetValue("VOIDOverlayTermo", $"\"{appPath}\"");
+            }
+            else
+            {
+                key.DeleteValue("VOIDOverlayTermo", false);
+            }
         }
     }
 }

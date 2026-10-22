@@ -8,13 +8,21 @@ namespace VOIDOverlay.Services;
 public sealed class SettingsService
 {
     private readonly string _settingsPath;
+    private readonly string? _legacySettingsPath;
 
     public SettingsService(string? customPath = null)
     {
         _settingsPath = customPath ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "VOIDOverlay",
+            "Termo",
             "settings.json");
+        _legacySettingsPath = customPath is null
+            ? Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "VOIDOverlay",
+                "settings.json")
+            : null;
 
         var folder = Path.GetDirectoryName(_settingsPath);
         if (!string.IsNullOrWhiteSpace(folder))
@@ -25,14 +33,19 @@ public sealed class SettingsService
 
     public OverlaySettings Load()
     {
-        if (!File.Exists(_settingsPath))
+        var sourcePath = File.Exists(_settingsPath)
+            ? _settingsPath
+            : _legacySettingsPath is not null && File.Exists(_legacySettingsPath)
+                ? _legacySettingsPath
+                : null;
+        if (sourcePath is null)
         {
             return new OverlaySettings();
         }
 
         try
         {
-            var text = File.ReadAllText(_settingsPath);
+            var text = File.ReadAllText(sourcePath);
             var settings = JsonSerializer.Deserialize<OverlaySettings>(text)
                 ?? throw new JsonException("The settings document must contain an object.");
             using var document = JsonDocument.Parse(text);
@@ -58,6 +71,25 @@ public sealed class SettingsService
             }
 
             settings.EdgeMargin = null;
+            if (settings.WindowWidth == 180 && settings.WindowHeight == 42)
+            {
+                settings.WindowWidth = 280;
+                settings.WindowHeight = 62;
+            }
+
+            settings.Validate();
+            if (!string.Equals(sourcePath, _settingsPath, StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    Save(settings);
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                {
+                    Trace.WriteLine($"Legacy settings were loaded but could not be migrated. {exception.Message}");
+                }
+            }
+
             return settings;
         }
         catch (JsonException exception)
@@ -79,6 +111,8 @@ public sealed class SettingsService
 
     public void Save(OverlaySettings settings)
     {
+        settings.Validate();
+        Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath)!);
         var payload = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
         var temporaryPath = _settingsPath + ".tmp";
         File.WriteAllText(temporaryPath, payload);

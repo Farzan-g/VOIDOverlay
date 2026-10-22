@@ -15,7 +15,7 @@ public sealed class OverlayPositionCalculatorTests
 
     [Theory]
     [MemberData(nameof(MonitorScenarios))]
-    public void AllCornersApplyIndependentDpiAwareOffsets(
+    public void AllAnchorsApplyIndependentDpiAwareOffsets(
         PixelBounds bounds,
         double dpiScaleX,
         double dpiScaleY,
@@ -34,12 +34,17 @@ public sealed class OverlayPositionCalculatorTests
             var location = Calculate(bounds, dpiScaleX, dpiScaleY, overlayWidthDip, overlayHeightDip,
                 horizontalOffsetDip, verticalOffsetDip, position);
 
-            var expectedLeft = position is OverlayPosition.TopLeft or OverlayPosition.BottomLeft
-                ? left + horizontalOffsetDip
-                : right - overlayWidthDip - horizontalOffsetDip;
-            var expectedTop = position is OverlayPosition.TopLeft or OverlayPosition.TopRight
-                ? top + verticalOffsetDip
-                : bottom - overlayHeightDip - verticalOffsetDip;
+            var baseLeft = position switch
+            {
+                OverlayPosition.TopLeft or OverlayPosition.BottomLeft => left + 10,
+                OverlayPosition.TopCenter or OverlayPosition.BottomCenter => (left + right - overlayWidthDip) / 2,
+                _ => right - overlayWidthDip - 10
+            };
+            var baseTop = position is OverlayPosition.TopLeft or OverlayPosition.TopCenter or OverlayPosition.TopRight
+                ? top + 10
+                : bottom - overlayHeightDip - 10;
+            var expectedLeft = Math.Clamp(baseLeft + horizontalOffsetDip, left, Math.Max(left, right - overlayWidthDip));
+            var expectedTop = Math.Clamp(baseTop + verticalOffsetDip, top, Math.Max(top, bottom - overlayHeightDip));
 
             Assert.Equal(expectedLeft, location.Left, 6);
             Assert.Equal(expectedTop, location.Top, 6);
@@ -56,11 +61,8 @@ public sealed class OverlayPositionCalculatorTests
     }
 
     [Theory]
-    [InlineData(OverlayPosition.TopLeft)]
-    [InlineData(OverlayPosition.TopRight)]
-    [InlineData(OverlayPosition.BottomLeft)]
-    [InlineData(OverlayPosition.BottomRight)]
-    public void ZeroOffsetsPlaceOverlayExactlyAgainstSelectedEdges(OverlayPosition position)
+    [MemberData(nameof(AllPositions))]
+    public void ZeroOffsetsRespectTheSharedTenDipEdgeInset(OverlayPosition position)
     {
         var bounds = new PixelBounds(0, 0, 1920, 1080);
         const double width = 180;
@@ -69,15 +71,20 @@ public sealed class OverlayPositionCalculatorTests
         var location = Calculate(bounds, 1, 1, width, height, 0, 0, position);
 
         if (position is OverlayPosition.TopLeft or OverlayPosition.BottomLeft)
-            Assert.Equal(bounds.Left, location.Left);
+            Assert.Equal(bounds.Left + 10, location.Left);
+        else if (position is OverlayPosition.TopCenter or OverlayPosition.BottomCenter)
+            Assert.Equal((bounds.Left + bounds.Right - width) / 2, location.Left);
         else
-            Assert.Equal(bounds.Right - width, location.Left);
+            Assert.Equal(bounds.Right - width - 10, location.Left);
 
-        if (position is OverlayPosition.TopLeft or OverlayPosition.TopRight)
-            Assert.Equal(bounds.Top, location.Top);
+        if (position is OverlayPosition.TopLeft or OverlayPosition.TopCenter or OverlayPosition.TopRight)
+            Assert.Equal(bounds.Top + 10, location.Top);
         else
-            Assert.Equal(bounds.Bottom - height, location.Top);
+            Assert.Equal(bounds.Bottom - height - 10, location.Top);
     }
+
+    public static IEnumerable<object[]> AllPositions() =>
+        Enum.GetValues<OverlayPosition>().Select(position => new object[] { position });
 
     [Theory]
     [InlineData(OverlayEdgeReference.FullScreen)]
@@ -95,31 +102,44 @@ public sealed class OverlayPositionCalculatorTests
     }
 
     [Theory]
-    [InlineData(OverlayPosition.TopLeft, -10, -20, -10, -20)]
-    [InlineData(OverlayPosition.TopRight, -10, -20, -10, -20)]
-    [InlineData(OverlayPosition.BottomLeft, -10, -20, -10, -20)]
-    [InlineData(OverlayPosition.BottomRight, -10, -20, -10, -20)]
-    public void NegativeOffsetsMovePredictablyOutsideTheSelectedEdges(
-        OverlayPosition position,
-        double horizontalOffset,
-        double verticalOffset,
-        double expectedHorizontalEdgeDistance,
-        double expectedVerticalEdgeDistance)
+    [MemberData(nameof(AllPositions))]
+    public void PositiveOffsetsMoveRightAndDownFromEveryAnchor(OverlayPosition position)
+    {
+        var bounds = new PixelBounds(0, 0, 1000, 800);
+
+        var baseline = Calculate(bounds, 1, 1, 100, 40, 0, 0, position);
+        var offset = Calculate(bounds, 1, 1, 100, 40, 2, 3, position);
+
+        Assert.Equal(2, offset.Left - baseline.Left);
+        Assert.Equal(3, offset.Top - baseline.Top);
+    }
+
+    [Theory]
+    [MemberData(nameof(AllPositions))]
+    public void ExtremeOffsetsRemainVisibleWithinSelectedDisplay(OverlayPosition position)
     {
         var bounds = new PixelBounds(0, 0, 1000, 800);
         const double width = 100;
         const double height = 40;
 
-        var location = Calculate(bounds, 1, 1, width, height, horizontalOffset, verticalOffset, position);
-        var actualHorizontalEdgeDistance = position is OverlayPosition.TopLeft or OverlayPosition.BottomLeft
-            ? location.Left - bounds.Left
-            : bounds.Right - (location.Left + width);
-        var actualVerticalEdgeDistance = position is OverlayPosition.TopLeft or OverlayPosition.TopRight
-            ? location.Top - bounds.Top
-            : bounds.Bottom - (location.Top + height);
+        var location = Calculate(bounds, 1, 1, width, height, 1000, 1000, position);
 
-        Assert.Equal(expectedHorizontalEdgeDistance, actualHorizontalEdgeDistance);
-        Assert.Equal(expectedVerticalEdgeDistance, actualVerticalEdgeDistance);
+        Assert.InRange(location.Left, bounds.Left, bounds.Right - width);
+        Assert.InRange(location.Top, bounds.Top, bounds.Bottom - height);
+    }
+
+    [Fact]
+    public void NegativeOffsetsMoveTowardTheLeftAndTopFromTheSelectedAnchor()
+    {
+        const double width = 100;
+        const double height = 40;
+        var bounds = new PixelBounds(0, 0, 1000, 800);
+
+        var rightBottom = Calculate(bounds, 1, 1, width, height, 0, 0, OverlayPosition.BottomRight);
+        var offset = Calculate(bounds, 1, 1, width, height, -20, -30, OverlayPosition.BottomRight);
+
+        Assert.Equal(-20, offset.Left - rightBottom.Left);
+        Assert.Equal(-30, offset.Top - rightBottom.Top);
     }
 
     [Fact]

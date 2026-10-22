@@ -44,13 +44,24 @@ public static class OverlayPositionCalculator
         var right = monitorBounds.Right / dpiScaleX;
         var bottom = monitorBounds.Bottom / dpiScaleY;
 
-        return position switch
+        const double edgeMarginDip = 10;
+        var baseLeft = position switch
         {
-            OverlayPosition.TopLeft => new(left + horizontalOffsetDip, top + verticalOffsetDip),
-            OverlayPosition.TopRight => new(right - overlayWidthDip - horizontalOffsetDip, top + verticalOffsetDip),
-            OverlayPosition.BottomLeft => new(left + horizontalOffsetDip, bottom - overlayHeightDip - verticalOffsetDip),
-            OverlayPosition.BottomRight => new(right - overlayWidthDip - horizontalOffsetDip, bottom - overlayHeightDip - verticalOffsetDip),
+            OverlayPosition.TopLeft or OverlayPosition.BottomLeft => left + edgeMarginDip,
+            OverlayPosition.TopCenter or OverlayPosition.BottomCenter => (left + right - overlayWidthDip) / 2,
+            OverlayPosition.TopRight or OverlayPosition.BottomRight => right - overlayWidthDip - edgeMarginDip,
             _ => throw new ArgumentOutOfRangeException(nameof(position))
         };
+        var baseTop = position switch
+        {
+            OverlayPosition.TopLeft or OverlayPosition.TopCenter or OverlayPosition.TopRight => top + edgeMarginDip,
+            OverlayPosition.BottomLeft or OverlayPosition.BottomCenter or OverlayPosition.BottomRight => bottom - overlayHeightDip - edgeMarginDip,
+            _ => throw new ArgumentOutOfRangeException(nameof(position))
+        };
+        var maxLeft = Math.Max(left, right - overlayWidthDip);
+        var maxTop = Math.Max(top, bottom - overlayHeightDip);
+        return new(
+            Math.Clamp(baseLeft + horizontalOffsetDip, left, maxLeft),
+            Math.Clamp(baseTop + verticalOffsetDip, top, maxTop));
     }
 }
