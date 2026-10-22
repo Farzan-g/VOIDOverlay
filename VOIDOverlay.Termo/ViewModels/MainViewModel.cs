@@ -42,7 +42,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _hardwareMonitor.ReadingUpdated += OnReadingUpdated;
         ToggleClickThroughCommand = new RelayCommand(ToggleClickThrough);
         ToggleCompactModeCommand = new RelayCommand(ToggleCompactMode);
-        RefreshCommand = new RelayCommand(RefreshNow);
+        RefreshCommand = new AsyncRelayCommand(RefreshNowAsync);
         SaveSettingsCommand = new RelayCommand(SaveSettings);
         _hardwareMonitor.Start(_settings.RefreshIntervalMs);
     }
@@ -75,7 +75,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public RelayCommand ToggleClickThroughCommand { get; }
     public RelayCommand ToggleCompactModeCommand { get; }
-    public RelayCommand RefreshCommand { get; }
+    public AsyncRelayCommand RefreshCommand { get; }
     public RelayCommand SaveSettingsCommand { get; }
 
     public IReadOnlyList<double?> CpuHistory => _cpuHistory;
@@ -178,15 +178,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsCompactMode));
     }
 
-    private void RefreshNow()
+    private async Task RefreshNowAsync()
     {
-        var reading = _hardwareMonitor.GetLatestReading();
-        OnReadingUpdated(this, reading);
-
-        Sensors.Clear();
-        foreach (var sensor in _hardwareMonitor.GetAvailableSensors())
+        try
         {
-            Sensors.Add(sensor);
+            var (reading, sensors) = await Task.Run(() =>
+                (_hardwareMonitor.GetLatestReading(), _hardwareMonitor.GetAvailableSensors()));
+            OnReadingUpdated(this, reading);
+
+            Sensors.Clear();
+            foreach (var sensor in sensors)
+            {
+                Sensors.Add(sensor);
+            }
+        }
+        catch (Exception exception)
+        {
+            Trace.WriteLine($"Manual hardware refresh failed: {exception}");
         }
     }
 

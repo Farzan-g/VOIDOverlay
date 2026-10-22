@@ -123,6 +123,17 @@ public sealed class MainViewModelTelemetryTests
         Assert.Equal(new double?[] { 558d, 559d }, fixture.ViewModel.GpuHistory);
     }
 
+    [Fact]
+    public async Task ManualRefreshCollectsHardwareSensorsOffTheCallingThread()
+    {
+        using var fixture = new ViewModelFixture();
+        var callingThreadId = Environment.CurrentManagedThreadId;
+
+        await fixture.ViewModel.RefreshCommand.ExecuteAsync(null);
+
+        Assert.NotEqual(callingThreadId, fixture.Monitor.SensorEnumerationThreadId);
+    }
+
     private sealed class ViewModelFixture : IDisposable
     {
         private readonly string _settingsPath = Path.Combine(
@@ -162,6 +173,7 @@ public sealed class MainViewModelTelemetryTests
 
         public event EventHandler<HardwareReading>? ReadingUpdated;
         public int LastStartedInterval { get; private set; }
+        public int SensorEnumerationThreadId { get; private set; }
 
         public HardwareReading GetLatestReading() => _latest;
 
@@ -171,7 +183,11 @@ public sealed class MainViewModelTelemetryTests
         {
         }
 
-        public IReadOnlyList<SensorStatus> GetAvailableSensors() => Array.Empty<SensorStatus>();
+        public IReadOnlyList<SensorStatus> GetAvailableSensors()
+        {
+            SensorEnumerationThreadId = Environment.CurrentManagedThreadId;
+            return Array.Empty<SensorStatus>();
+        }
 
         public void Publish(HardwareReading reading)
         {

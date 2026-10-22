@@ -47,18 +47,22 @@ try {
         throw 'The publish output contains PDB files; refusing to publish development symbols.'
     }
 
+    $hadPreviousPublish = Test-Path -LiteralPath $publishDirectory
+    $previousPublishMoved = $false
     try {
-        if (Test-Path -LiteralPath $publishDirectory) {
+        if ($hadPreviousPublish) {
             Move-Item -LiteralPath $publishDirectory -Destination $backupDirectory
+            $previousPublishMoved = $true
         }
 
         Move-Item -LiteralPath $stagingDirectory -Destination $publishDirectory
     }
     catch {
-        if (Test-Path -LiteralPath $publishDirectory) {
+        if ((-not $hadPreviousPublish -or $previousPublishMoved) -and
+            (Test-Path -LiteralPath $publishDirectory)) {
             Remove-Item -LiteralPath $publishDirectory -Recurse -Force
         }
-        if (Test-Path -LiteralPath $backupDirectory) {
+        if ($previousPublishMoved -and (Test-Path -LiteralPath $backupDirectory)) {
             Move-Item -LiteralPath $backupDirectory -Destination $publishDirectory
         }
         throw

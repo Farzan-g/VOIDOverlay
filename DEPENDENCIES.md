@@ -21,10 +21,10 @@ This inventory was checked against the restored `project.assets.json` and NuGet 
 
 | Package | Resolved version | NuGet license metadata |
 |---|---:|---|
-| coverlet.collector | 6.0.0 | MIT |
-| Microsoft.NET.Test.Sdk | 17.8.0 | MIT license file metadata |
-| xunit | 2.5.3 | Apache-2.0 |
-| xunit.runner.visualstudio | 2.5.3 | Apache-2.0 |
+| coverlet.collector | 6.0.4 | MIT |
+| Microsoft.NET.Test.Sdk | 17.14.1 | MIT license file metadata |
+| xunit | 2.9.3 | Apache-2.0 |
+| xunit.runner.visualstudio | 3.1.4 | Apache-2.0 |
 
 The test project's transitive test-platform packages are not fully enumerated here and should be included in a release SBOM if those packages are redistributed.
 

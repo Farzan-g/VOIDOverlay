@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using VOIDOverlay.Models;
@@ -32,9 +33,15 @@ public sealed class SettingsService
         try
         {
             var text = File.ReadAllText(_settingsPath);
-            var settings = JsonSerializer.Deserialize<OverlaySettings>(text) ?? new OverlaySettings();
+            var settings = JsonSerializer.Deserialize<OverlaySettings>(text)
+                ?? throw new JsonException("The settings document must contain an object.");
             using var document = JsonDocument.Parse(text);
             var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                throw new JsonException("The settings document must contain an object.");
+            }
+
             var hasHorizontalOffset = root.TryGetProperty(nameof(OverlaySettings.HorizontalOffsetX), out _);
             var hasVerticalOffset = root.TryGetProperty(nameof(OverlaySettings.VerticalOffsetY), out _);
             if (settings.EdgeMargin.HasValue)
@@ -53,8 +60,19 @@ public sealed class SettingsService
             settings.EdgeMargin = null;
             return settings;
         }
-        catch
+        catch (JsonException exception)
         {
+            Trace.WriteLine($"Settings could not be parsed; defaults were loaded. {exception.Message}");
+            return new OverlaySettings();
+        }
+        catch (IOException exception)
+        {
+            Trace.WriteLine($"Settings could not be read; defaults were loaded. {exception.Message}");
+            return new OverlaySettings();
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Trace.WriteLine($"Settings could not be read; defaults were loaded. {exception.Message}");
             return new OverlaySettings();
         }
     }
@@ -62,6 +80,8 @@ public sealed class SettingsService
     public void Save(OverlaySettings settings)
     {
         var payload = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(_settingsPath, payload);
+        var temporaryPath = _settingsPath + ".tmp";
+        File.WriteAllText(temporaryPath, payload);
+        File.Move(temporaryPath, _settingsPath, overwrite: true);
     }
 }

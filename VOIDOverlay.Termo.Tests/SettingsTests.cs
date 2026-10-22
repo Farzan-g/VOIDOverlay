@@ -78,4 +78,30 @@ public class SettingsTests
             }
         }
     }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("[]")]
+    public void SettingsService_UsesDefaultsWhenJsonDoesNotContainAnObject(string json)
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"void-overlay-settings-{Guid.NewGuid():N}");
+        var path = Path.Combine(folder, "settings.json");
+        try
+        {
+            Directory.CreateDirectory(folder);
+            File.WriteAllText(path, json);
+
+            var settings = new VOIDOverlay.Services.SettingsService(path).Load();
+
+            Assert.Equal(new OverlaySettings().Position, settings.Position);
+            Assert.Equal(new OverlaySettings().RefreshIntervalMs, settings.RefreshIntervalMs);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
+    }
 }

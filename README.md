@@ -9,7 +9,7 @@ VOIDOverlay Termo (short display name: **Termo**) is a transparent, always-on-to
 **VOID Overlay** is a family of small, focused, minimalist desktop overlays.
 
 - **VOIDOverlay Termo (Termo):** the existing standalone tool for CPU and GPU temperature monitoring.
-- **VOIDOverlay Metron:** a planned, separate sibling project for CPU, GPU, and RAM utilization, plus in-game FPS when available. Metron is not implemented in this repository, and its planned features are not part of Termo.
+- **VOIDOverlay Metron:** a separate, independently buildable sibling application for CPU, GPU, and RAM utilization, with FPS unavailable unless a real frame-statistics provider is configured. Metron is maintained in its own repository and is not a dependency of Termo.
 
 ## Features
 
@@ -20,7 +20,7 @@ VOIDOverlay Termo (short display name: **Termo**) is a transparent, always-on-to
 - Configurable sampling interval (250–5000 ms).
 - Settings persisted under `%LOCALAPPDATA%\VOIDOverlay\settings.json`.
 - Diagnostics mode for sensor discovery, selection, readings, and positioning.
-- Application, window, and tray icons based on `VOIDOverlay.Termo/assets/void-overlay-logo.png`.
+- Application, window, and tray icons use `VOIDOverlay.Termo/assets/void-overlay.ico`.
 
 ## Supported platform and requirements
 
@@ -65,7 +65,7 @@ To create a framework-dependent Windows x64 publish folder:
 .\scripts\publish-windows-x64.ps1
 ```
 
-The output is written to `publish\VOIDOverlay-Termo\win-x64\` with the `VOIDOverlay.Termo.exe` executable. The publish is framework-dependent (`--self-contained false`), so users need the .NET 8 Windows Desktop Runtime. The executable requests administrator approval when launched. The script does not create an installer or archive.
+The output is written to `publish\VOIDOverlay-Termo\win-x64\` with the `VOIDOverlay.Termo.exe` executable. The publish is framework-dependent (`--self-contained false`), so users need the .NET 8 Windows Desktop Runtime. The executable requests administrator approval when launched. The script stages and validates a replacement before updating the previous publish directory. It does not create an installer or archive.
 
 ## Use and configure
 
@@ -75,7 +75,7 @@ The tray icon menu provides:
 - **Overlay Position** with TopLeft, TopRight, BottomLeft, and BottomRight presets.
 - **Lock/Unlock**, **Settings**, **Start with Windows**, and **Exit**.
 
-Settings provides sampling interval, lock/click-through/startup preferences, and position fine-tuning. Horizontal X and vertical Y offsets are specified in WPF device-independent units (DIPs), default to zero, and accept values from -200 to 1000. Negative offsets intentionally move beyond the selected edge; large positive offsets may move the overlay beyond the opposite edge. Edge reference can be the full monitor bounds or the taskbar-excluding work area. Existing settings using the former shared edge margin are migrated to matching initial X and Y offsets.
+Settings provides sampling interval, lock/click-through/startup preferences, and position fine-tuning. Horizontal X and vertical Y offsets are specified in WPF device-independent units (DIPs), default to zero, and accept values from -200 to 1000. Negative offsets intentionally move beyond the selected edge; large positive offsets may move the overlay beyond the opposite edge. Edge reference can be the full monitor bounds or the taskbar-excluding work area. Existing settings using the former shared edge margin are migrated to matching initial X and Y offsets. Settings writes use a temporary file before replacing the current JSON file; malformed or unreadable settings are reported to diagnostic tracing and defaults are used.
 
 Position is calculated relative to the monitor currently containing the overlay, with the primary monitor used if no window monitor is available. Per-window DPI is used for conversion between physical monitor bounds and WPF DIPs.
 
