@@ -11,6 +11,6 @@ The MIT license in `LICENSE` applies to the VOIDOverlay Termo source code; it do
 
 Other resolved Microsoft runtime/platform packages reported MIT license metadata in the restored NuGet package inventory. Test-only package licensing is summarized in `DEPENDENCIES.md`; those packages are not part of the application publish output checked for this release preparation.
 
-The supplied `VOIDOverlay/assets/void-overlay-logo.png` artwork and generated ICO are included as application assets. Their ownership and any separate redistribution terms were not independently established; confirm those rights before public release.
+The supplied `VOIDOverlay.Termo/assets/void-overlay-logo.png` artwork and generated ICO are included as application assets. Their ownership and any separate redistribution terms were not independently established; confirm those rights before public release.
 
 This notice is based on local NuGet metadata and archive inspection. It is not a legal opinion, does not include all third-party license texts, and does not establish that the application package is ready for redistribution.

@@ -20,7 +20,7 @@ VOIDOverlay Termo (short display name: **Termo**) is a transparent, always-on-to
 - Configurable sampling interval (250–5000 ms).
 - Settings persisted under `%LOCALAPPDATA%\VOIDOverlay\settings.json`.
 - Diagnostics mode for sensor discovery, selection, readings, and positioning.
-- Application, window, and tray icons based on `VOIDOverlay/assets/void-overlay-logo.png`.
+- Application, window, and tray icons based on `VOIDOverlay.Termo/assets/void-overlay-logo.png`.
 
 ## Supported platform and requirements
 
@@ -36,7 +36,7 @@ The project targets `net8.0-windows`, uses WPF and Windows Forms, and has been b
 There is not yet a public installer or release download. To run from source, clone or download the project, open PowerShell in the repository root, and run:
 
 ```powershell
-dotnet run --project .\VOIDOverlay\VOIDOverlay.csproj
+dotnet run --project .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj
 ```
 
 Approve the Windows elevation prompt. The overlay runs in the notification area; closing or hiding the small overlay does not exit the process.
@@ -46,9 +46,9 @@ Approve the Windows elevation prompt. The overlay runs in the notification area;
 Install the .NET 8 SDK or a compatible newer SDK, then run:
 
 ```powershell
-dotnet restore .\VOIDOverlay\VOIDOverlay.csproj
-dotnet test .\VOIDOverlay.Tests\VOIDOverlay.Tests.csproj --configuration Release
-dotnet build .\VOIDOverlay\VOIDOverlay.csproj --configuration Release --no-restore
+dotnet restore .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj
+dotnet test .\VOIDOverlay.Termo.Tests\VOIDOverlay.Termo.Tests.csproj --configuration Release
+dotnet build .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj --configuration Release --no-restore
 ```
 
 The release helper script runs the same restore, test, and build sequence:
@@ -65,7 +65,7 @@ To create a framework-dependent Windows x64 publish folder:
 .\scripts\publish-windows-x64.ps1
 ```
 
-The output is written to `artifacts\publish\win-x64\`. Users of this output need the .NET 8 Windows Desktop Runtime installed. The executable requests administrator approval when launched. This is not an installer and does not create a signed package.
+The output is written to `publish\VOIDOverlay-Termo\win-x64\` with the `VOIDOverlay.Termo.exe` executable. The publish is framework-dependent (`--self-contained false`), so users need the .NET 8 Windows Desktop Runtime. The executable requests administrator approval when launched. The script does not create an installer or archive.
 
 ## Use and configure
 
@@ -108,7 +108,7 @@ Logs can disclose hardware names, sensor identifiers/readings, and local timesta
 Run all automated tests with:
 
 ```powershell
-dotnet test .\VOIDOverlay.Tests\VOIDOverlay.Tests.csproj --configuration Release
+dotnet test .\VOIDOverlay.Termo.Tests\VOIDOverlay.Termo.Tests.csproj --configuration Release
 ```
 
 The test project covers CPU sensor selection, telemetry/view-model updates, position calculations, settings persistence/migration, and settings-window sizing. Automated tests do not replace physical validation on different CPUs, GPUs, monitors, and DPI configurations.

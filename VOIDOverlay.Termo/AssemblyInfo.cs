@@ -5,4 +5,4 @@ using System.Runtime.CompilerServices;
     ResourceDictionaryLocation.None,
     ResourceDictionaryLocation.SourceAssembly
 )]
-[assembly: InternalsVisibleTo("VOIDOverlay.Tests")]
+[assembly: InternalsVisibleTo("VOIDOverlay.Termo.Tests")]

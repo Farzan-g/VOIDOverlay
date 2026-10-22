@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\VOIDOverlay\VOIDOverlay.csproj" />
+    <ProjectReference Include="..\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj" />
   </ItemGroup>
 
 </Project>

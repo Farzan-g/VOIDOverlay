@@ -14,8 +14,8 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Restore
-        run: dotnet restore .\VOIDOverlay\VOIDOverlay.csproj
+        run: dotnet restore .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj
       - name: Test
-        run: dotnet test .\VOIDOverlay.Tests\VOIDOverlay.Tests.csproj --configuration Release
+        run: dotnet test .\VOIDOverlay.Termo.Tests\VOIDOverlay.Termo.Tests.csproj --configuration Release
       - name: Build Release
-        run: dotnet build .\VOIDOverlay\VOIDOverlay.csproj --configuration Release --no-restore
+        run: dotnet build .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj --configuration Release --no-restore

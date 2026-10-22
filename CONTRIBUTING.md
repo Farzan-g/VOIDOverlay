@@ -11,9 +11,9 @@ Thanks for considering a contribution to VOIDOverlay Termo, a standalone tool in
 From the repository root:
 
 ```powershell
-dotnet restore .\VOIDOverlay\VOIDOverlay.csproj
-dotnet test .\VOIDOverlay.Tests\VOIDOverlay.Tests.csproj --configuration Release
-dotnet build .\VOIDOverlay\VOIDOverlay.csproj --configuration Release --no-restore
+dotnet restore .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj
+dotnet test .\VOIDOverlay.Termo.Tests\VOIDOverlay.Termo.Tests.csproj --configuration Release
+dotnet build .\VOIDOverlay.Termo\VOIDOverlay.Termo.csproj --configuration Release --no-restore
 ```
 
 Use `.\scripts\build-release.ps1` to run the standard local verification sequence.

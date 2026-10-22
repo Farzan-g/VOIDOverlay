@@ -15,7 +15,7 @@ This inventory was checked against the restored `project.assets.json` and NuGet 
 |---|---:|---|
 | HidSharp | 2.1.0 | Metadata links to license text; package release notes state Apache licensing, but the exact license text could not be retrieved for this review. |
 | Mono.Posix.NETStandard | 1.0.0 | Package metadata points to a Microsoft license redirect; the resulting license text could not be retrieved for this review. |
-| Microsoft.NETCore.Platforms, Microsoft.Win32.Registry, Microsoft runtime/platform packages, System.CodeDom, System.IO.Ports, System.Management, and System.Security packages | See `VOIDOverlay/obj/project.assets.json` after restore | MIT in NuGet metadata for the resolved packages inspected. |
+| Microsoft.NETCore.Platforms, Microsoft.Win32.Registry, Microsoft runtime/platform packages, System.CodeDom, System.IO.Ports, System.Management, and System.Security packages | See `VOIDOverlay.Termo/obj/project.assets.json` after restore | MIT in NuGet metadata for the resolved packages inspected. |
 
 ## Test-only direct dependencies
 

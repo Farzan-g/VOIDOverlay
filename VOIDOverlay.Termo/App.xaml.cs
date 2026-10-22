@@ -197,7 +197,7 @@ public partial class App : System.Windows.Application
 
     private static void UpdateStartupRegistry(bool enabled)
     {
-        var appPath = Environment.ProcessPath ?? Environment.GetCommandLineArgs().FirstOrDefault() ?? "VOIDOverlay.exe";
+        var appPath = Environment.ProcessPath ?? Environment.GetCommandLineArgs().FirstOrDefault() ?? "VOIDOverlay.Termo.exe";
         var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
         if (key is null)
         {

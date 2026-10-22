@@ -7,9 +7,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>VOIDOverlay</RootNamespace>
-    <AssemblyName>VOIDOverlay</AssemblyName>
+    <AssemblyName>VOIDOverlay.Termo</AssemblyName>
     <AssemblyTitle>VOIDOverlay Termo</AssemblyTitle>
     <Product>VOIDOverlay Termo</Product>
+    <Version>0.1.0</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>assets\void-overlay.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
