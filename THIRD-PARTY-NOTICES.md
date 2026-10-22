@@ -1,6 +1,6 @@
 # Third-party notices (review required)
 
-The MIT license in `LICENSE` applies to the VOID Overlay project code; it does not relicense third-party dependencies.
+The MIT license in `LICENSE` applies to the VOIDOverlay Termo source code; it does not relicense third-party dependencies.
 
 ## Application dependencies
 

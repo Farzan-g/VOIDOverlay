@@ -8,6 +8,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>VOIDOverlay</RootNamespace>
     <AssemblyName>VOIDOverlay</AssemblyName>
+    <AssemblyTitle>VOIDOverlay Termo</AssemblyTitle>
+    <Product>VOIDOverlay Termo</Product>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>assets\void-overlay.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>

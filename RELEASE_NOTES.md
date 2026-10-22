@@ -1,6 +1,6 @@
-# Draft first public release notes
+# VOIDOverlay Termo — Draft first public release notes
 
-This is a draft based on the current source tree, not a published release or a record of Git history. The project has no Git repository or tagged release history in the inspected workspace.
+This is a draft based on the current source tree, not a published release or a record of Git history. VOIDOverlay Termo has no tagged release history in the inspected workspace.
 
 ## Candidate: v0.1.0
 

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for considering a contribution to VOID Overlay. Preserve its compact transparent UI and avoid unrelated rewrites.
+Thanks for considering a contribution to VOIDOverlay Termo, a standalone tool in the VOID Overlay family. Preserve Termo's compact transparent UI and avoid unrelated rewrites.
 
 ## Development setup
 

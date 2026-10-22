@@ -1,14 +1,20 @@
-# VOID Overlay
+# VOIDOverlay Termo
 
-VOID Overlay is a transparent, always-on-top Windows desktop overlay for live CPU and GPU telemetry, with compact temperature history graphs and system-tray controls.
+VOIDOverlay Termo (short display name: **Termo**) is a transparent, always-on-top Windows desktop overlay focused on displaying CPU and GPU temperatures, with compact temperature history graphs and system-tray controls. It is a standalone tool in the VOID Overlay project family.
 
 > There is no application screenshot in this source tree. Hardware behavior varies by system; read [known limitations](#hardware-and-sensor-limitations) before relying on a particular reading.
+
+## VOID Overlay family
+
+**VOID Overlay** is a family of small, focused, minimalist desktop overlays.
+
+- **VOIDOverlay Termo (Termo):** the existing standalone tool for CPU and GPU temperature monitoring.
+- **VOIDOverlay Metron:** a planned, separate sibling project for CPU, GPU, and RAM utilization, plus in-game FPS when available. Metron is not implemented in this repository, and its planned features are not part of Termo.
 
 ## Features
 
 - CPU and GPU temperature readings and compact history graphs.
-- CPU/GPU load and clock reporting when the hardware provider exposes those values.
-- RAM/VRAM usage where available.
+- CPU/GPU load, clock, RAM, and VRAM reporting when the hardware provider exposes those values; temperatures remain the focus of Termo.
 - Transparent, topmost overlay with lock and click-through options.
 - Four corner presets, independent X/Y offsets, and full-monitor or work-area reference.
 - Configurable sampling interval (250–5000 ms).

@@ -39,7 +39,7 @@ public partial class App : System.Windows.Application
             Directory.CreateDirectory(Path.GetDirectoryName(diagnosticsPath)!);
             Trace.Listeners.Add(new TextWriterTraceListener(diagnosticsPath));
             Trace.AutoFlush = true;
-            Trace.WriteLine($"VOID Overlay diagnostics started at {DateTimeOffset.Now:O}.");
+            Trace.WriteLine($"VOIDOverlay Termo diagnostics started at {DateTimeOffset.Now:O}.");
         }
 
         _settings = _settingsService.Load();
@@ -147,7 +147,7 @@ public partial class App : System.Windows.Application
     {
         var iconResource = System.Windows.Application.GetResourceStream(
             new Uri("pack://application:,,,/assets/void-overlay.ico", UriKind.Absolute))
-            ?? throw new InvalidOperationException("The VOID Overlay icon resource could not be loaded.");
+            ?? throw new InvalidOperationException("The VOIDOverlay Termo icon resource could not be loaded.");
         _trayIconStream = iconResource.Stream;
         _trayIcon = new Icon(_trayIconStream);
 
@@ -155,7 +155,7 @@ public partial class App : System.Windows.Application
         {
             Icon = _trayIcon,
             Visible = true,
-            Text = "VOID Overlay"
+            Text = "Termo"
         };
 
         var contextMenu = new ContextMenuStrip();
