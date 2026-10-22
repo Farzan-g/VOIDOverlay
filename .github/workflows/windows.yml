@@ -1,0 +1,21 @@
+name: Windows build and tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore .\VOIDOverlay\VOIDOverlay.csproj
+      - name: Test
+        run: dotnet test .\VOIDOverlay.Tests\VOIDOverlay.Tests.csproj --configuration Release
+      - name: Build Release
+        run: dotnet build .\VOIDOverlay\VOIDOverlay.csproj --configuration Release --no-restore

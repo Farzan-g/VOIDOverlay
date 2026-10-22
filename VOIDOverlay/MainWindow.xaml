@@ -1,0 +1,69 @@
+<Window x:Class="VOIDOverlay.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:VOIDOverlay.Controls"
+        Title="VOID Overlay"
+        Icon="pack://application:,,,/assets/void-overlay.ico"
+        Width="180"
+        Height="42"
+        Topmost="True"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStyle="None"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        MouseRightButtonDown="Window_MouseRightButtonDown">
+
+    <Grid Width="175" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Width="175" HorizontalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="108" />
+                <ColumnDefinition Width="62" />
+            </Grid.ColumnDefinitions>
+
+            <controls:TemperatureHistoryChart Grid.Column="0"
+                                             Width="108"
+                                             Height="14"
+                                             Series="{Binding CpuHistory}"
+                                             StrokeBrush="#82E7FF" />
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding CpuTemperatureText}"
+                       Width="62"
+                       Foreground="#82E7FF"
+                       FontSize="11"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left" />
+        </Grid>
+
+        <Grid Grid.Row="1" Width="175" HorizontalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="108" />
+                <ColumnDefinition Width="62" />
+            </Grid.ColumnDefinitions>
+
+            <controls:TemperatureHistoryChart Grid.Column="0"
+                                             Width="108"
+                                             Height="14"
+                                             Series="{Binding GpuHistory}"
+                                             StrokeBrush="#FFB067" />
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding GpuTemperatureText}"
+                       Width="62"
+                       Foreground="#FFB067"
+                       FontSize="11"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left" />
+        </Grid>
+    </Grid>
+</Window>
