@@ -4,8 +4,8 @@
         xmlns:controls="clr-namespace:VOIDOverlay.Controls"
         Title="VOID Overlay Termo"
         Icon="pack://application:,,,/assets/void-overlay.ico"
-        Width="280"
         Height="62"
+        SizeToContent="Width"
         Topmost="True"
         AllowsTransparency="True"
         Background="Transparent"
@@ -17,69 +17,64 @@
         MouseRightButtonDown="Window_MouseRightButtonDown">
 
     <Border x:Name="OverlaySurface"
-            Width="260"
             Height="44"
-            Background="#80111720"
+            Background="Transparent"
             CornerRadius="5"
             Padding="10,4"
             HorizontalAlignment="Center"
             VerticalAlignment="Center">
-    <Grid Width="240" Height="36" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Grid Height="36" HorizontalAlignment="Center" VerticalAlignment="Center">
         <Grid.RowDefinitions>
             <RowDefinition Height="18" />
             <RowDefinition Height="18" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Width="240" HorizontalAlignment="Center">
+        <Grid Grid.Row="0" HorizontalAlignment="Center">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="28" />
-                <ColumnDefinition Width="132" />
-                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock x:Name="CpuLabel" Grid.Column="0" Text="CPU" Foreground="#F2F4F7"
-                       FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <controls:TemperatureHistoryChart x:Name="CpuChart" Grid.Column="1"
+            <controls:TemperatureHistoryChart x:Name="CpuChart" Grid.Column="0"
                                              Width="132"
                                              Height="13"
                                              Series="{Binding CpuHistory}"
-                                             StrokeBrush="#4DE3D2" />
+                                             StrokeBrush="#4DE3D2"
+                                             Margin="0,0,8,0" />
 
             <TextBlock x:Name="CpuTemperatureTextBlock"
-                       Grid.Column="2"
+                       Grid.Column="1"
                        Text="{Binding CpuTemperatureText}"
-                       Width="80"
                        Foreground="#4DE3D2"
                        FontSize="13"
                        FontWeight="SemiBold"
                        VerticalAlignment="Center"
-                       HorizontalAlignment="Left" />
+                       HorizontalAlignment="Left"
+                       AutomationProperties.Name="CPU temperature" />
         </Grid>
 
-        <Grid Grid.Row="1" Width="240" HorizontalAlignment="Center">
+        <Grid Grid.Row="1" HorizontalAlignment="Center">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="28" />
-                <ColumnDefinition Width="132" />
-                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock x:Name="GpuLabel" Grid.Column="0" Text="GPU" Foreground="#F2F4F7"
-                       FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <controls:TemperatureHistoryChart x:Name="GpuChart" Grid.Column="1"
+            <controls:TemperatureHistoryChart x:Name="GpuChart" Grid.Column="0"
                                              Width="132"
                                              Height="13"
                                              Series="{Binding GpuHistory}"
-                                             StrokeBrush="#FFAE5C" />
+                                             StrokeBrush="#FFAE5C"
+                                             Margin="0,0,8,0" />
 
             <TextBlock x:Name="GpuTemperatureTextBlock"
-                       Grid.Column="2"
+                       Grid.Column="1"
                        Text="{Binding GpuTemperatureText}"
-                       Width="80"
                        Foreground="#FFAE5C"
                        FontSize="13"
                        FontWeight="SemiBold"
                        VerticalAlignment="Center"
-                       HorizontalAlignment="Left" />
+                       HorizontalAlignment="Left"
+                       AutomationProperties.Name="GPU temperature" />
         </Grid>
     </Grid>
     </Border>

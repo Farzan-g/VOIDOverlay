@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Microsoft.Win32;
 using VOIDOverlay.Models;
 using VOIDOverlay.Services;
 using VOIDOverlay.ViewModels;
@@ -17,6 +18,7 @@ public partial class MainWindow : Window
     private const int GWL_EXSTYLE = -20;
     private const int WS_EX_LAYERED = 0x80000;
     private const int WS_EX_TRANSPARENT = 0x20;
+    private const int WM_DPICHANGED = 0x02E0;
 
     public MainWindow(OverlaySettings? settings = null, bool diagnosticsEnabled = false)
     {
@@ -33,6 +35,8 @@ public partial class MainWindow : Window
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
         SourceInitialized += MainWindow_SourceInitialized;
+        SizeChanged += (_, _) => ApplyWindowPosition();
+        SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
     }
 
     public void ApplySettings(OverlaySettings settings)
@@ -78,8 +82,6 @@ public partial class MainWindow : Window
         }
 
         var settings = vm.Settings;
-        Width = settings.WindowWidth;
-        Height = settings.WindowHeight;
         UpdateLayout();
 
         var targetScreen = GetTargetScreen();
@@ -89,13 +91,9 @@ public partial class MainWindow : Window
             ToPixelBounds(screenBounds),
             ToPixelBounds(workArea),
             settings.EdgeReference);
-        var dpi = PresentationSource.FromVisual(this) is HwndSource source
-            ? GetDpiForWindow(source.Handle)
-            : 96u;
-        var dpiScaleX = dpi / 96d;
-        var dpiScaleY = dpi / 96d;
-        var overlayWidth = ActualWidth > 0 ? ActualWidth : Width;
-        var overlayHeight = ActualHeight > 0 ? ActualHeight : Height;
+        var (dpiScaleX, dpiScaleY) = GetScale(targetScreen);
+        var overlayWidth = ActualWidth > 0 ? ActualWidth : DesiredSize.Width;
+        var overlayHeight = ActualHeight > 0 ? ActualHeight : DesiredSize.Height;
         var location = OverlayPositionCalculator.Calculate(
             edgeBounds,
             dpiScaleX,
@@ -130,12 +128,18 @@ public partial class MainWindow : Window
 
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
     {
+        if (PresentationSource.FromVisual(this) is HwndSource source)
+        {
+            source.AddHook(WindowMessageHook);
+        }
+
         ApplyWindowPosition();
         UpdateClickThroughState();
     }
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
+        SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         if (DataContext is MainViewModel vm)
         {
             vm.SaveSettings();
@@ -186,8 +190,6 @@ public partial class MainWindow : Window
         GpuTemperatureTextBlock.FontSize = settings.FontSize;
         CpuTemperatureTextBlock.Foreground = ParseBrush(settings.AccentColor, 1);
         GpuTemperatureTextBlock.Foreground = ParseBrush(settings.SecondaryAccentColor, 1);
-        CpuLabel.Foreground = ParseBrush(settings.TextColor, 1);
-        GpuLabel.Foreground = ParseBrush(settings.TextColor, 1);
         CpuChart.StrokeBrush = ParseBrush(settings.AccentColor, 1);
         GpuChart.StrokeBrush = ParseBrush(settings.SecondaryAccentColor, 1);
     }
@@ -230,7 +232,49 @@ public partial class MainWindow : Window
             $"windowPx={(rectAvailable ? physicalRect.ToString() : "unavailable")}.");
     }
 
-    private static uint GetDpiForWindow(IntPtr hwnd) => hwnd == IntPtr.Zero ? 96 : GetDpiForWindowNative(hwnd);
+    private static (double ScaleX, double ScaleY) GetScale(Screen screen)
+    {
+        try
+        {
+            var point = new NativePoint(screen.WorkingArea.Left + 1, screen.WorkingArea.Top + 1);
+            var monitor = MonitorFromPoint(point, 2);
+            if (monitor != IntPtr.Zero &&
+                GetDpiForMonitor(monitor, 0, out var dpiX, out var dpiY) == 0)
+            {
+                return (dpiX / 96d, dpiY / 96d);
+            }
+        }
+        catch (DllNotFoundException)
+        {
+        }
+        catch (EntryPointNotFoundException)
+        {
+        }
+
+        return (1, 1);
+    }
+
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e) =>
+        Dispatcher.BeginInvoke(
+            new Action(ApplyWindowPosition),
+            System.Windows.Threading.DispatcherPriority.Loaded);
+
+    private IntPtr WindowMessageHook(
+        IntPtr hwnd,
+        int message,
+        IntPtr wParam,
+        IntPtr lParam,
+        ref bool handled)
+    {
+        if (message == WM_DPICHANGED)
+        {
+            Dispatcher.BeginInvoke(
+                new Action(ApplyWindowPosition),
+                System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        return IntPtr.Zero;
+    }
 
     [DllImport("user32.dll")]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
@@ -238,8 +282,18 @@ public partial class MainWindow : Window
     [DllImport("user32.dll")]
     private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
-    [DllImport("user32.dll", EntryPoint = "GetDpiForWindow")]
-    private static extern uint GetDpiForWindowNative(IntPtr hwnd);
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly struct NativePoint(int x, int y)
+    {
+        public readonly int X = x;
+        public readonly int Y = y;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromPoint(NativePoint point, uint flags);
+
+    [DllImport("shcore.dll")]
+    private static extern int GetDpiForMonitor(IntPtr monitor, int dpiType, out uint dpiX, out uint dpiY);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

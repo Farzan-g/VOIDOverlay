@@ -14,7 +14,7 @@ public class SettingsTests
         Assert.Equal(62, settings.WindowHeight);
         Assert.Equal(1000, settings.RefreshIntervalMs);
         Assert.Equal(13, settings.FontSize);
-        Assert.True(settings.BackgroundEnabled);
+        Assert.False(settings.BackgroundEnabled);
         Assert.Equal("#111720", settings.BackgroundColor);
         Assert.Equal(0.5, settings.BackgroundOpacity);
         Assert.Equal("#F2F4F7", settings.TextColor);
@@ -36,21 +36,51 @@ public class SettingsTests
         try
         {
             var service = new VOIDOverlay.Services.SettingsService(path);
-            service.Save(new OverlaySettings
+            foreach (var position in Enum.GetValues<OverlayPosition>())
             {
-                Position = OverlayPosition.TopLeft,
-                HorizontalOffsetX = -23.5,
-                VerticalOffsetY = 123.25,
-                EdgeReference = OverlayEdgeReference.FullScreen
-            });
+                service.Save(new OverlaySettings
+                {
+                    Position = position,
+                    HorizontalOffsetX = -23.5,
+                    VerticalOffsetY = 123.25,
+                    EdgeReference = OverlayEdgeReference.FullScreen,
+                    BackgroundEnabled = true
+                });
 
-            var reloaded = service.Load();
+                var reloaded = service.Load();
 
-            Assert.Equal(OverlayPosition.TopLeft, reloaded.Position);
-            Assert.Equal(-23.5, reloaded.HorizontalOffsetX);
-            Assert.Equal(123.25, reloaded.VerticalOffsetY);
-            Assert.Equal(OverlayEdgeReference.FullScreen, reloaded.EdgeReference);
+                Assert.Equal(position, reloaded.Position);
+                Assert.Equal(-23.5, reloaded.HorizontalOffsetX);
+                Assert.Equal(123.25, reloaded.VerticalOffsetY);
+                Assert.Equal(OverlayEdgeReference.FullScreen, reloaded.EdgeReference);
+                Assert.True(reloaded.BackgroundEnabled);
+            }
+
             Assert.DoesNotContain("EdgeMargin", File.ReadAllText(path));
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void SettingsService_UsesTransparentBackgroundWhenSettingIsMissing()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"void-overlay-settings-{Guid.NewGuid():N}");
+        var path = Path.Combine(folder, "settings.json");
+        try
+        {
+            Directory.CreateDirectory(folder);
+            File.WriteAllText(path, """{"Position": 4}""");
+
+            var loaded = new VOIDOverlay.Services.SettingsService(path).Load();
+
+            Assert.False(loaded.BackgroundEnabled);
+            Assert.Equal(OverlayPosition.TopCenter, loaded.Position);
         }
         finally
         {

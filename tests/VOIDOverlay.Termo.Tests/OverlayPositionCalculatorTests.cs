@@ -128,18 +128,37 @@ public sealed class OverlayPositionCalculatorTests
         Assert.InRange(location.Top, bounds.Top, bounds.Bottom - height);
     }
 
-    [Fact]
-    public void NegativeOffsetsMoveTowardTheLeftAndTopFromTheSelectedAnchor()
+    [Theory]
+    [MemberData(nameof(AllPositions))]
+    public void NegativeOffsetsMoveTowardTheLeftAndTopFromEveryAnchor(OverlayPosition position)
     {
         const double width = 100;
         const double height = 40;
         var bounds = new PixelBounds(0, 0, 1000, 800);
 
-        var rightBottom = Calculate(bounds, 1, 1, width, height, 0, 0, OverlayPosition.BottomRight);
-        var offset = Calculate(bounds, 1, 1, width, height, -20, -30, OverlayPosition.BottomRight);
+        var baseline = Calculate(bounds, 1, 1, width, height, 0, 0, position);
+        var offset = Calculate(bounds, 1, 1, width, height, -2, -3, position);
 
-        Assert.Equal(-20, offset.Left - rightBottom.Left);
-        Assert.Equal(-30, offset.Top - rightBottom.Top);
+        Assert.Equal(-2, offset.Left - baseline.Left);
+        Assert.Equal(-3, offset.Top - baseline.Top);
+    }
+
+    [Fact]
+    public void CenterAndRightAnchorsUseTheFinalRenderedOverlayWidth()
+    {
+        var bounds = new PixelBounds(0, 0, 1920, 1080);
+        const double narrowWidth = 190;
+        const double wideWidth = 230;
+
+        var centeredNarrow = Calculate(bounds, 1, 1, narrowWidth, 44, 0, 0, OverlayPosition.TopCenter);
+        var centeredWide = Calculate(bounds, 1, 1, wideWidth, 44, 0, 0, OverlayPosition.TopCenter);
+        var rightNarrow = Calculate(bounds, 1, 1, narrowWidth, 44, 0, 0, OverlayPosition.TopRight);
+        var rightWide = Calculate(bounds, 1, 1, wideWidth, 44, 0, 0, OverlayPosition.TopRight);
+
+        Assert.Equal((bounds.Right - narrowWidth) / 2, centeredNarrow.Left);
+        Assert.Equal((bounds.Right - wideWidth) / 2, centeredWide.Left);
+        Assert.Equal(bounds.Right - narrowWidth - 10, rightNarrow.Left);
+        Assert.Equal(bounds.Right - wideWidth - 10, rightWide.Left);
     }
 
     [Fact]
